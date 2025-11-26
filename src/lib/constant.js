@@ -1,6 +1,6 @@
 export const events = [
   {
-    slug: "react-conf-2024",
+    slug: "react-conf-2026",
     image: "/images/event1.png",
     title: "React Conf 2026",
     location: "San Francisco, CA",
@@ -24,7 +24,7 @@ export const events = [
     time: "8:30 AM - 7:00 PM",
   },
   {
-    slug: "ai-hackathon-2024",
+    slug: "ai-innovation-hackathon",
     image: "/images/event4.png",
     title: "AI Innovation Hackathon",
     location: "Seattle, WA",

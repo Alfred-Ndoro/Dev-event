@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import LightRays from "./components/LightRays";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
-import Eventpage from "./pages/Eventpage";
+import EventPage from "./pages/EventPage";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/events" element={<Eventpage />} />
+          <Route path="/events/:slug" element={<EventPage />} />
         </Routes>
       </BrowserRouter>
 
