@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import EventDetailItem from "./EventDetailItem";
+import EventAgenda from "./EventAgenda";
 
 // // utility function to generate a slug from a title
 // const createSlug = (title) => {
@@ -10,6 +11,17 @@ import EventDetailItem from "./EventDetailItem";
 //     .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with a single hyphen
 //     .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
 // };
+
+// tags components
+const EventTags = ({ tags }) => (
+  <div className="flex flex-row gap-1.5 flex-wrap">
+    {tags.map((tag) => (
+      <div className="pill" key={tag}>
+        {tag}
+      </div>
+    ))}
+  </div>
+);
 
 const EventContent = ({ slug }) => {
   // State to hold event details (should be an object for a single event)
@@ -72,7 +84,7 @@ const EventContent = ({ slug }) => {
   const bookings = 10;
 
   return (
-    <>
+    <div className="px-8">
       <div className="header">
         <h1>Event Details</h1>
 
@@ -125,9 +137,18 @@ const EventContent = ({ slug }) => {
               label={eventDetails.audience}
             />
           </section>
+          {/* agenda component */}
+          <EventAgenda agendaItems={eventDetails.agenda} />
+
+          <section className="flex-col-gap-2">
+            <h2>About the Organizer</h2>
+            <p>{eventDetails.organizer}</p>
+          </section>
+
+          <EventTags tags={eventDetails.tags} />
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
