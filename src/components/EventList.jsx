@@ -3,7 +3,7 @@ import EventCard from "./EventCard";
 
 const EventList = () => {
   return (
-    <div className="mt-20 space-y-7">
+    <div className="mt-20 space-y-7 px-6" id="allEvents">
       <h3>Featured Events</h3>
 
       <ul className="events">

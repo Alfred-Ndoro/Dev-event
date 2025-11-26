@@ -2,9 +2,9 @@ export const events = [
   {
     slug: "react-conf-2024",
     image: "/images/event1.png",
-    title: "React Conf 2024",
+    title: "React Conf 2026",
     location: "San Francisco, CA",
-    date: "March 15, 2024",
+    date: "March 15, 2026",
     time: "9:00 AM - 6:00 PM",
   },
   {
@@ -12,7 +12,7 @@ export const events = [
     image: "/images/event2.png",
     title: "Next.js Summit",
     location: "Austin, TX",
-    date: "April 22, 2024",
+    date: "April 22, 2026",
     time: "10:00 AM - 5:00 PM",
   },
   {
@@ -20,7 +20,7 @@ export const events = [
     image: "/images/event3.png",
     title: "JavaScript World Conference",
     location: "New York, NY",
-    date: "May 8, 2024",
+    date: "May 8, 2026",
     time: "8:30 AM - 7:00 PM",
   },
   {
@@ -28,7 +28,7 @@ export const events = [
     image: "/images/event4.png",
     title: "AI Innovation Hackathon",
     location: "Seattle, WA",
-    date: "June 14-16, 2024",
+    date: "June 14-16, 2026",
     time: "48 Hours",
   },
   {
@@ -36,7 +36,7 @@ export const events = [
     image: "/images/event5.png",
     title: "Web3 Developer Meetup",
     location: "Miami, FL",
-    date: "July 20, 2024",
+    date: "July 20, 2026",
     time: "6:00 PM - 9:00 PM",
   },
   {
@@ -44,7 +44,7 @@ export const events = [
     image: "/images/event6.png",
     title: "Full Stack Conference",
     location: "Denver, CO",
-    date: "August 12, 2024",
+    date: "August 12, 2026",
     time: "9:00 AM - 6:00 PM",
   },
   {
@@ -52,7 +52,7 @@ export const events = [
     image: "/images/event1.png",
     title: "DevOps Unleashed",
     location: "Chicago, IL",
-    date: "September 5, 2024",
+    date: "September 5, 2026",
     time: "8:00 AM - 5:30 PM",
   },
   {
@@ -60,7 +60,7 @@ export const events = [
     image: "/images/event2.png",
     title: "Mobile Development Summit",
     location: "Los Angeles, CA",
-    date: "October 18, 2024",
+    date: "October 18, 2026",
     time: "9:30 AM - 6:00 PM",
   },
   {
@@ -68,7 +68,7 @@ export const events = [
     image: "/images/event3.png",
     title: "Cybersecurity Conference",
     location: "Boston, MA",
-    date: "November 2, 2024",
+    date: "November 2, 2026",
     time: "8:00 AM - 7:00 PM",
   },
   {
@@ -76,7 +76,7 @@ export const events = [
     image: "/images/event4.png",
     title: "Data Science Hackathon",
     location: "San Diego, CA",
-    date: "December 7-9, 2024",
+    date: "December 7-9, 2026",
     time: "72 Hours",
   },
   {
@@ -84,7 +84,7 @@ export const events = [
     image: "/images/event5.png",
     title: "Cloud Native Meetup",
     location: "Portland, OR",
-    date: "January 15, 2025",
+    date: "January 15, 2026",
     time: "6:30 PM - 9:00 PM",
   },
   {
@@ -92,7 +92,7 @@ export const events = [
     image: "/images/event6.png",
     title: "Frontend Masters Conference",
     location: "Nashville, TN",
-    date: "February 28, 2025",
+    date: "February 28, 2026",
     time: "9:00 AM - 5:00 PM",
   },
 ];

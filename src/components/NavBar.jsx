@@ -16,7 +16,9 @@ const NavBar = () => {
 
         <ul>
           <Link to="/">Home</Link>
-          <Link to="/events">Events</Link>
+
+          <a href="#allEvents">Events</a>
+
           <Link to="/events/new">Create Events</Link>
         </ul>
       </nav>
