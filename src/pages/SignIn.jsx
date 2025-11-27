@@ -38,7 +38,7 @@ const SignIn = () => {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             alt="logo"
-            src="../../public/icons/logo.png"
+            src="/icons/logo.png"
             className="mx-auto h-10 w-auto"
           />
           <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-white">

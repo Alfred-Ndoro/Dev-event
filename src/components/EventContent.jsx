@@ -15,7 +15,7 @@ import BookEvent from "./BookEvent";
 
 // tags components
 const EventTags = ({ tags }) => (
-  <div className="flex flex-row gap-1.5 flex-wrap">
+  <div className="flex flex-row gap-2 flex-wrap">
     {tags.map((tag) => (
       <div className="pill mb-8" key={tag}>
         {tag}
