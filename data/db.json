@@ -183,16 +183,9 @@
   ],
   "users": [
     {
-      "id": "76e2",
+      "id": "faeb",
       "email": "mosesn579@gmail.com",
-      "password": "123",
-      "confirmPassword": "123"
-    },
-    {
-      "id": "d545",
-      "email": "peterm@gmail.com",
-      "password": "1234",
-      "confirmPassword": "1234"
+      "password": "1234567"
     }
   ]
 }

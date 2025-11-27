@@ -1,11 +1,19 @@
+import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
   });
+  const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
+
+  // custom hook to access context functions
+  const { signup, loading } = useAuth();
 
   function handleChange(event) {
     const name = event.target.name;
@@ -19,21 +27,34 @@ const SignUp = () => {
     });
   }
 
-  function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
-    // post request to send form data to db.json
+    // client side validation
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-    fetch("http://localhost:3000/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...formData,
-      }),
-    });
-  }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    const result = await signup(formData.email, formData.password);
+    setMessage(result.message);
+    if (result.success) {
+      // Redirect or clear form on success
+      console.log("Account created successfully!");
+      navigate("/");
+    }
+  };
 
   return (
     <>
@@ -119,20 +140,30 @@ const SignUp = () => {
             <div>
               <button
                 type="submit"
+                disabled={loading}
                 className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               >
-                Sign up
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
               </button>
             </div>
+
+            {message && <p>{message}</p>}
           </form>
 
           <p className="mt-10 text-center text-sm/6 text-gray-400">
-            Already a user?{" "}
+            Already have an account?{" "}
             <Link
               to="/signin"
               className="font-semibold text-indigo-400 hover:text-indigo-300"
             >
-              sign in instead
+              Sign in here
             </Link>
           </p>
         </div>
