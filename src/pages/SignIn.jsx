@@ -26,7 +26,7 @@ const SignIn = () => {
     if (result.success) {
       // Redirect or clear form on success
       console.log("Logged in successfully!");
-      navigate("/");
+      navigate("/home");
     } else {
       setMessage("Invalid email or password");
     }

@@ -52,7 +52,7 @@ const SignUp = () => {
     if (result.success) {
       // Redirect or clear form on success
       console.log("Account created successfully!");
-      navigate("/");
+      navigate("/home");
     }
   };
 

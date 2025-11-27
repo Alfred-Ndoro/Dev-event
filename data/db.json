@@ -27,7 +27,8 @@
         "frontend",
         "conference"
       ],
-      "slug": "react-conf-2026"
+      "slug": "react-conf-2026",
+      "id": "853c"
     },
     {
       "title": "Next.js 16 Workshop",
@@ -58,7 +59,8 @@
         "workshop",
         "vercel"
       ],
-      "slug": "nextjs-16-workshop"
+      "slug": "nextjs-16-workshop",
+      "id": "414c"
     },
     {
       "title": "TypeScript Deep Dive",
@@ -87,7 +89,8 @@
         "programming",
         "types"
       ],
-      "slug": "typeScript-deep-dive"
+      "slug": "typeScript-deep-dive",
+      "id": "4e28"
     },
     {
       "title": "Web Performance Masterclass",
@@ -116,7 +119,8 @@
         "web",
         "core-web-vitals"
       ],
-      "slug": "web-performance-masterclass"
+      "slug": "web-performance-masterclass",
+      "id": "edf3"
     },
     {
       "title": "AI-Powered Web Development",
@@ -147,7 +151,8 @@
         "webdev",
         "gpt"
       ],
-      "slug": "ai-Powered-web-development"
+      "slug": "ai-Powered-web-development",
+      "id": "c13f"
     },
     {
       "title": "Modern CSS and Tailwind CSS",
@@ -178,7 +183,8 @@
         "frontend",
         "ui"
       ],
-      "slug": "tailwind-css"
+      "slug": "tailwind-css",
+      "id": "ce27"
     }
   ],
   "users": [
@@ -186,6 +192,11 @@
       "id": "faeb",
       "email": "mosesn579@gmail.com",
       "password": "1234567"
+    },
+    {
+      "id": "b355",
+      "email": "peterm@gmail.com",
+      "password": "123456"
     }
   ]
 }
