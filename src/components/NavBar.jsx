@@ -14,7 +14,8 @@ const NavBar = () => {
 
           <a href="#allEvents">Events</a>
 
-          <Link to="/events/new">Create Events</Link>
+          {/* Updated link to point to the new page */}
+          <Link to="/bookings">My Bookings</Link>
         </ul>
       </nav>
     </header>

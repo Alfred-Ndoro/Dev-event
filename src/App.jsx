@@ -7,6 +7,7 @@ import SignIn from "./pages/SignIn";
 import LandingPage from "./pages/LandingPage";
 import ConditionalNavBar from "./components/ConditionalNavBar";
 import { AuthProvider } from "./lib/auth-context";
+import ManageBookings from "./pages/ManageBookings";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/events/:slug" element={<EventPage />} />
+            <Route path="/bookings" element={<ManageBookings />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

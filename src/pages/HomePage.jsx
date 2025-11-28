@@ -1,6 +1,5 @@
 import ExploreButton from "@/components/ExploreButton";
 import EventList from "@/components/EventList";
-import NavBar from "@/components/NavBar";
 
 const HomePage = () => {
   return (

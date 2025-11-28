@@ -198,5 +198,37 @@
       "email": "peterm@gmail.com",
       "password": "123456"
     }
+  ],
+  "bookings": [
+    {
+      "id": "bk_2",
+      "userId": "faeb",
+      "eventSlug": "nextjs-16-workshop",
+      "eventTitle": "Next.js 16 Workshop",
+      "eventImage": "/images/event2.png",
+      "date": "2025-11-20",
+      "time": "14:00",
+      "createdAt": "2024-11-27T15:30:00Z"
+    },
+    {
+      "id": "2766",
+      "userId": "faeb",
+      "eventSlug": "react-conf-2026",
+      "eventTitle": "React Conference 2026",
+      "eventImage": "/images/event1.png",
+      "date": "2025-12-15",
+      "time": "09:00",
+      "createdAt": "2025-11-28T07:19:15.206Z"
+    },
+    {
+      "id": "a790",
+      "userId": "b355",
+      "eventSlug": "typeScript-deep-dive",
+      "eventTitle": "TypeScript Deep Dive",
+      "eventImage": "/images/event3.png",
+      "date": "2025-11-10",
+      "time": "10:00",
+      "createdAt": "2025-11-28T07:20:18.644Z"
+    }
   ]
 }
