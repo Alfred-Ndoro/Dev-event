@@ -1,17 +1,60 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import emailjs from "@emailjs/browser";
+import { useAuth } from "@/lib/auth-context";
 
-const BookEvent = ({ eventName, eventDetail }) => {
+const BookEvent = ({ event }) => {
+  const { currentUser } = useAuth();
   const form = useRef();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  // Auto-fill email if user is logged in
+  useEffect(() => {
+    if (currentUser?.email) {
+      setEmail(currentUser.email);
+    }
+  }, [currentUser]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    // Save Booking to Database (if user is logged in)
+    if (currentUser) {
+      const newBooking = {
+        userId: currentUser.id,
+        eventSlug: event.slug,
+        eventTitle: event.title,
+        eventImage: event.image,
+        date: event.date,
+        time: event.time,
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/bookings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newBooking),
+        });
+
+        if (!response.ok) {
+          console.error("Failed to save booking to database");
+        }
+      } catch (error) {
+        console.error("Error saving booking:", error);
+      }
+    } else {
+      console.warn(
+        "User not logged in - booking will not appear in Manage Page"
+      );
+    }
+
+    // Send Email
     const SERVICE_ID = "service_eqs914o";
     const TEMPLATE_ID = "template_fpfg7tl";
     const PUBLIC_KEY = "v8pA_DkmPyxjPG5T0";
@@ -33,18 +76,25 @@ const BookEvent = ({ eventName, eventDetail }) => {
         }
       );
   };
+
   return (
     <div id="book-event">
       {submitted ? (
-        <p className="text-sm">ThankYou for signing up!</p>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-green-400">Thank you for signing up!</p>
+          <p className="text-xs text-gray-400">
+            Check "My Bookings" to manage this event.
+          </p>
+        </div>
       ) : (
         <form ref={form} onSubmit={handleSubmit}>
-          <input type="hidden" name="event_name" value={eventName} />
-          <input type="hidden" name="message" value={eventDetail} />
+          {/* Hidden inputs for EmailJS */}
+          <input type="hidden" name="event_name" value={event.title} />
+          <input type="hidden" name="message" value={event.description} />
           <input
             type="hidden"
             name="subject"
-            value={`Booking for ${eventName}`}
+            value={`Booking for ${event.title}`}
           />
 
           <div>
@@ -69,12 +119,20 @@ const BookEvent = ({ eventName, eventDetail }) => {
               onChange={(e) => setEmail(e.target.value)}
               id="email"
               placeholder="Enter your email address"
+              required
             />
           </div>
 
           <button type="submit" disabled={loading} className="button-submit">
-            {loading ? "Sending..." : "Submit"}
+            {loading ? "Processing..." : "Book Now"}
           </button>
+
+          {!currentUser && (
+            <p className="text-xs text-yellow-500 mt-2">
+              Note: You are not logged in. This booking won't appear in your
+              dashboard.
+            </p>
+          )}
         </form>
       )}
     </div>
