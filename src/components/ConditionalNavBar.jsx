@@ -7,8 +7,8 @@ const ConditionalNavBar = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  // Don't show navbar on landing page
-  if (location.pathname === "/") {
+  // Don't show navbar on landing page or admin dashboard
+  if (location.pathname === "/" || location.pathname === "/admin") {
     return null;
   }
 

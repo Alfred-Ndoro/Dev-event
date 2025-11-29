@@ -2,15 +2,23 @@
   "events": [
     {
       "title": "React Conference 2026",
-      "description": "Annual React conference bringing together developers from around the world to learn about the latest in React development",
-      "overview": "Join the biggest React event of the year! Learn about the latest React features, best practices, and network with industry leaders. This conference features keynote speakers from Meta, Vercel, and other major tech companies. Topics include React Server Components, Suspense, concurrent rendering, and the future of React development. Whether you're a beginner or an expert, there's something for everyone.",
       "image": "/images/event1.png",
-      "venue": "Tech Convention Center",
       "location": "San Francisco, CA",
-      "date": "2025-12-15",
+      "venue": "Tech Convention Center",
+      "date": "2025-12-12",
       "time": "09:00",
       "mode": "hybrid",
       "audience": "React Developers, Frontend Engineers, Full-stack Developers",
+      "overview": "Join the biggest React event of the year! Learn about the latest React features, best practices, and network with industry leaders. This conference features keynote speakers from Meta, Vercel, and other major tech companies. Topics include React Server Components, Suspense, concurrent rendering, and the future of React development. Whether you're a beginner or an expert, there's something for everyone.",
+      "description": "Annual React conference bringing together developers from around the world to learn about the latest in React development",
+      "organizer": "React Community Team",
+      "tags": [
+        "react",
+        "javascript",
+        "frontend",
+        "conference"
+      ],
+      "slug": "react-conf-2026",
       "agenda": [
         "Registration & Welcome Coffee (8:00 AM)",
         "Opening Keynote: Future of React (9:00 AM)",
@@ -20,14 +28,6 @@
         "Advanced Performance Optimization (3:30 PM)",
         "Closing Remarks & Announcements (5:00 PM)"
       ],
-      "organizer": "React Community Team",
-      "tags": [
-        "react",
-        "javascript",
-        "frontend",
-        "conference"
-      ],
-      "slug": "react-conf-2026",
       "id": "853c"
     },
     {
@@ -197,6 +197,11 @@
       "id": "b355",
       "email": "peterm@gmail.com",
       "password": "123456"
+    },
+    {
+      "id": "1f9a",
+      "email": "admin@gmail.com",
+      "password": "admin123"
     }
   ],
   "bookings": [
