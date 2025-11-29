@@ -24,9 +24,13 @@ const SignIn = () => {
     const result = await login(email, password);
 
     if (result.success) {
-      // Redirect or clear form on success
+      // Redirect based on user role
       console.log("Logged in successfully!");
-      navigate("/home");
+      if (email === "admin@gmail.com") {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
     } else {
       setMessage("Invalid email or password");
     }

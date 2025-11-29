@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import ConditionalNavBar from "./components/ConditionalNavBar";
 import { AuthProvider } from "./lib/auth-context";
 import ManageBookings from "./pages/ManageBookings";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/home" element={<HomePage />} />
             <Route path="/events/:slug" element={<EventPage />} />
             <Route path="/bookings" element={<ManageBookings />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
