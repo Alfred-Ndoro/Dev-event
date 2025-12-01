@@ -7,8 +7,6 @@ const EventList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
   /**
    * fetch event by slug
    * the use effect will run once when the component mounts
@@ -18,7 +16,7 @@ const EventList = () => {
     setIsLoading(true);
     setError(null);
 
-    fetch(`${BASE_URL}/events`)
+    fetch("http://localhost:3000/events")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch events from server.");

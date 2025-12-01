@@ -10,8 +10,6 @@ const BookEvent = ({ event }) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
   // Auto-fill email if user is logged in
   useEffect(() => {
     if (currentUser?.email) {
@@ -36,7 +34,7 @@ const BookEvent = ({ event }) => {
       };
 
       try {
-        const response = await fetch(`${BASE_URL}/bookings`, {
+        const response = await fetch("http://localhost:3000/bookings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
