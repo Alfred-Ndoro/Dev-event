@@ -572,7 +572,7 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-gradient-to-r from-[#5dfeca] to-[#4adbc0] text-gray-900 font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  className="px-6 py-2.5 bg-linear-to-r from-[#5dfeca] to-[#4adbc0] text-gray-900 font-semibold rounded-lg hover:opacity-90 transition-opacity"
                 >
                   {editingEvent ? "Save Changes" : "Create Event"}
                 </button>
