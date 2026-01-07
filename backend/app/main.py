@@ -126,24 +126,27 @@ def add_event(event: EventBase, db: Session = Depends(get_db)):
 
     # add events to database
     db.add(database_model.Event(**event.model_dump()))
+    db.commit()
     return event
 
 # update a event
 @app.put("/event")
-def update_event(id: int, event: EventBase):
-    for i in range(len(events)):
-        if events[i].id == id:
-            events[i] = event
-            return "Event updated successfully"
+def update_event(slug: str, event: EventBase, db: Session = Depends(get_db)):
+    # check if event exits
+    db_event = db.query(database_model.Event).filter(database_model.Event.slug == slug).first()
 
-    return "Event not found" 
+    if db_event:
+        pass
+    else:
+        return "Event not found" 
 
 # delete an event
 @app.delete("/event")
-def del_event(id: int):
-    for i in range(len(events)):
-        if events[i].id == id:
-            del events[id]
-            return "Event deleted successfully"
-        
-    return "Event not found"
+def del_event(slug: str, db: Session = Depends(get_db)):
+    db_event = db.query(database_model.Event).filter(database_model.Event.slug == slug).first()
+
+    if db_event:
+        db.delete(db_event)
+        db.commit()
+    else:
+        return "Event not found"
