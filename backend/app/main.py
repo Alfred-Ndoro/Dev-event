@@ -1,8 +1,11 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+import json
+from pathlib import Path
+
 from models import EventBase
 from database import SessionLocal, engine
-from sqlalchemy.orm import Session
 import database_model
 import auth
 
@@ -91,46 +94,24 @@ def init_db():
     count = db.query(database_model.Event).count()
     
     if count == 0:
-        # Seed initial events
-        seed_events = [
-            database_model.Event(
-                title="React Conference 2026",
-                image="/images/event1.png",
-                location="San Francisco, CA",
-                venue="Tech Convention Center",
-                date="2026-12-12",
-                time="09:00",
-                mode="hybrid",
-                audience="React Developers, Frontend Engineers",
-                overview="Join the biggest React event of the year!",
-                description="Annual React conference",
-                organizer="React Community Team",
-                tags=["react", "javascript", "frontend"],
-                slug="react-conf-2026",
-                agenda=["Opening Keynote", "Workshops", "Networking"],
-            ),
-            database_model.Event(
-                title="Next.js 16 Workshop",
-                image="/images/event2.png",
-                location="Virtual Event",
-                venue="Online via Zoom",
-                date="2026-11-20",
-                time="11:00",
-                mode="online",
-                audience="Web Developers",
-                overview="Learn Next.js 16 features",
-                description="Hands-on workshop",
-                organizer="Vercel",
-                tags=["nextjs", "react", "fullstack"],
-                slug="nextjs-16-workshop",
-                agenda=["App Router", "Server Components", "Q&A"],
-            ),
-        ]
+        # Load events from db.json
+        json_path = Path(__file__).parent.parent.parent / "data" / "db.json"
         
-        for event in seed_events:
-            db.add(event)
-        
-        db.commit()
+        if json_path.exists():
+            with open(json_path, "r") as f:
+                data = json.load(f)
+            
+            for event_data in data.get("events", []):
+                # Remove 'id' field as SQLite will auto-generate it
+                event_data.pop("id", None)
+                
+                db_event = database_model.Event(**event_data)
+                db.add(db_event)
+            
+            db.commit()
+            print(f"Seeded {len(data.get('events', []))} events from db.json")
+        else:
+            print(f"Warning: {json_path} not found, no events seeded")
     
     db.close()
 
