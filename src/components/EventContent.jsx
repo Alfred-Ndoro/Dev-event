@@ -2,16 +2,7 @@ import { useEffect, useState } from "react";
 import EventDetailItem from "./EventDetailItem";
 import EventAgenda from "./EventAgenda";
 import BookEvent from "./BookEvent";
-
-// // utility function to generate a slug from a title
-// const createSlug = (title) => {
-//   return title
-//     .toLowerCase()
-//     .trim()
-//     .replace(/[^\w\s-]/g, "") // Remove all non-word characters (except spaces and hyphens)
-//     .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with a single hyphen
-//     .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
-// };
+import { eventsAPI } from "@/lib/api";
 
 // tags components
 const EventTags = ({ tags }) => (
@@ -25,76 +16,61 @@ const EventTags = ({ tags }) => (
 );
 
 const EventContent = ({ slug }) => {
-  // State to hold event details (should be an object for a single event)
   const [eventDetails, setEventDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /**
-   * fetch event by slug
-   * the use effect will run with dependency of slug
-   */
   useEffect(() => {
-    // Reset state for new fetch
+    if (!slug) return;
+
     setIsLoading(true);
     setError(null);
 
-    fetch("http://localhost:3000/events")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch events from server.");
-        }
-        return response.json(); // Parse the data in JSON format
-      })
-      .then((events) => {
-        // filter the events array to find the match
-        const foundEvent = events.find((event) => {
-          return event.slug === slug;
-        });
-
-        if (foundEvent) {
-          setEventDetails(foundEvent);
-        } else {
-          setError(`No event found for slug: ${slug}`);
-        }
+    eventsAPI
+      .getBySlug(slug)
+      .then((event) => {
+        setEventDetails(event);
       })
       .catch((err) => {
         console.error("Fetch Error:", err);
-        setError("An error occurred while fetching the data.");
+        setError(err.message || "An error occurred while fetching the event.");
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, [slug]); // Rerun effect when the 'slug' prop changes
+  }, [slug]);
 
-  //   Render logic based on state
   if (isLoading) {
-    return <div>Loading event details...</div>;
+    return (
+      <div className="flex-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div style={{ color: "red" }}>Error: {error}</div>;
+    return (
+      <div className="text-center text-red-400 py-10">
+        <p>Error: {error}</p>
+      </div>
+    );
   }
 
   if (!eventDetails) {
-    // Should be covered by the error state above, but good as a fallback
-    return <div>Event not found.</div>;
+    return <div className="text-center py-10">Event not found.</div>;
   }
 
-  //  constant for number of bookings
   const bookings = 10;
 
   return (
     <div className="px-8">
       <div className="header">
         <h1>Event Details</h1>
-
         <p>{eventDetails.description}</p>
       </div>
 
       <div className="details">
-        {/* left side -event content */}
-
+        {/* left side - event content */}
         <div className="content">
           <img
             src={eventDetails.image}
@@ -138,7 +114,7 @@ const EventContent = ({ slug }) => {
               label={eventDetails.audience}
             />
           </section>
-          {/* agenda component */}
+
           <EventAgenda agendaItems={eventDetails.agenda} />
 
           <section className="flex-col-gap-2">
@@ -146,11 +122,10 @@ const EventContent = ({ slug }) => {
             <p>{eventDetails.organizer}</p>
           </section>
 
-          <EventTags tags={eventDetails.tags} />
+          <EventTags tags={eventDetails.tags || []} />
         </div>
 
         {/* right side - booking form */}
-
         <aside className="booking">
           <div className="signup-card">
             <h2>Book Your Spot</h2>
@@ -163,7 +138,6 @@ const EventContent = ({ slug }) => {
               <p className="text-sm">Be the first to book your spot!</p>
             )}
 
-            {/* book event component */}
             <BookEvent event={eventDetails} />
           </div>
         </aside>
