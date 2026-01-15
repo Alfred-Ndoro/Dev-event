@@ -62,4 +62,24 @@ export const eventsAPI = {
   delete: (slug) => fetchAPI(`/events/${slug}`, { method: "DELETE" }),
 };
 
+export const bookingsAPI = {
+  // Get all bookings for a user
+  getByUserId: (userId) => fetchAPI(`/bookings/${userId}`),
+
+  // Get a single booking by ID
+  getById: (bookingId) => fetchAPI(`/bookings/detail/${bookingId}`),
+
+  // Create a new booking
+  create: (data) =>
+    fetchAPI("/bookings", { method: "POST", body: JSON.stringify(data) }),
+
+  // Delete a booking
+  delete: (bookingId) =>
+    fetchAPI(`/bookings/${bookingId}`, { method: "DELETE" }),
+
+  // Check if user has booked an event
+  checkBooking: (userId, eventSlug) =>
+    fetchAPI(`/bookings/check/${userId}/${eventSlug}`),
+};
+
 export { APIError };

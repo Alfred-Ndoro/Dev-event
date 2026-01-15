@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = !!currentUser;
-  const isAdmin = currentUser?.email === "admin@gmail.com";
+  const isAdmin = currentUser?.email === "deveventadmin@gmail.com";
 
   // 4. Context Value
   const value = {
