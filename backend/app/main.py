@@ -22,7 +22,11 @@ app = FastAPI(
 app.include_router(auth.router)
 
 # Get allowed origins from environment or use defaults
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+allowed_origins = [origin.strip() for origin in origins_env.split(",")]
+
+# Log origins for debugging (visible in Render logs)
+print(f"CORS Allowed Origins: {allowed_origins}")
 
 # setup CORS
 app.add_middleware(
