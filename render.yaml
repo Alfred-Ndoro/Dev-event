@@ -1,0 +1,41 @@
+# Render Blueprint - Infrastructure as Code
+# Deploy with: https://render.com/deploy
+
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: dev-event-api
+    runtime: python
+    region: oregon
+    rootDir: backend/app
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: user
+        sync: false
+      - key: password
+        sync: false
+      - key: host
+        sync: false
+      - key: port
+        value: 5432
+      - key: dbname
+        sync: false
+    healthCheckPath: /
+
+  # PostgreSQL Database
+  - type: pserv
+    name: dev-event-db
+    runtime: postgres
+    region: oregon
+    plan: free
+    databaseName: dev_event
+    user: dev_event_user

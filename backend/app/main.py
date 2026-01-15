@@ -7,18 +7,31 @@ from models import EventBase, BookingCreate, BookingResponse
 from database import SessionLocal, engine
 import database_model
 import auth
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 # initializing the app
-app = FastAPI()
+app = FastAPI(
+    title="Dev-Event API",
+    description="API for managing developer events and bookings",
+    version="1.0.0"
+)
 app.include_router(auth.router)
+
+# Get allowed origins from environment or use defaults
+origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+allowed_origins = [origin.strip() for origin in origins_env.split(",")]
+
+# Log origins for debugging (visible in Render logs)
+print(f"CORS Allowed Origins: {allowed_origins}")
 
 # setup CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

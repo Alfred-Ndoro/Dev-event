@@ -20,6 +20,10 @@ A modern, full-stack developer event management platform built with **React**, *
   - [Backend Setup](#backend-setup)
   - [Frontend Setup](#frontend-setup)
 - [Environment Variables](#-environment-variables)
+- [Deployment](#-deployment)
+  - [Deploy Backend to Render](#deploy-backend-to-render)
+  - [Deploy Frontend to Vercel](#deploy-frontend-to-vercel)
+  - [Deploy with Docker](#deploy-with-docker)
 - [API Endpoints](#-api-endpoints)
 - [Authentication](#-authentication)
 - [Contributing](#-contributing)
@@ -260,13 +264,122 @@ password=your_postgres_password
 host=your_db_host
 port=5432
 dbname=your_database_name
+SECRET_KEY=your-super-secret-jwt-key
+ALGORITHM=HS256
+ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
 ```
+
+> 💡 **Generate a secure SECRET_KEY:** `openssl rand -hex 32`
 
 ### Frontend (`.env` in project root)
 
 ```env
 VITE_API_URL=http://localhost:8000
 ```
+
+---
+
+## 🚀 Deployment
+
+### Deploy Backend to Render
+
+1. **Create a PostgreSQL Database**
+
+   - Sign up at [Render](https://render.com)
+   - Go to Dashboard → New → PostgreSQL
+   - Note the **External Database URL** (connection string)
+
+2. **Deploy the FastAPI Backend**
+
+   - Go to Dashboard → New → Web Service
+   - Connect your GitHub repository
+   - Configure:
+     | Setting | Value |
+     |---------|-------|
+     | **Root Directory** | `backend/app` |
+     | **Runtime** | Python 3 |
+     | **Build Command** | `pip install -r requirements.txt` |
+     | **Start Command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+
+3. **Set Environment Variables** in Render Dashboard:
+
+   ```
+   user=<from_database_url>
+   password=<from_database_url>
+   host=<from_database_url>
+   port=5432
+   dbname=<from_database_url>
+   SECRET_KEY=<generate_with: openssl rand -hex 32>
+   ALGORITHM=HS256
+   ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   ```
+
+4. **Deploy** – Render will automatically build and deploy your backend
+
+### Deploy Frontend to Vercel
+
+1. **Sign up** at [Vercel](https://vercel.com)
+
+2. **Import your repository**
+
+   - Click "New Project" → Import from GitHub
+   - Select your Dev-Event repository
+
+3. **Configure build settings** (auto-detected from `vercel.json`):
+   | Setting | Value |
+   |---------|-------|
+   | **Framework Preset** | Vite |
+   | **Build Command** | `npm run build` |
+   | **Output Directory** | `dist` |
+
+4. **Set Environment Variables**:
+
+   ```
+   VITE_API_URL=https://your-backend.onrender.com
+   ```
+
+5. **Deploy** – Click "Deploy" and your frontend will be live!
+
+### Deploy with Docker
+
+For self-hosted deployments using Docker Compose:
+
+1. **Clone and configure**
+
+   ```bash
+   git clone https://github.com/your-username/Dev-event.git
+   cd Dev-event
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+2. **Build the frontend**
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+3. **Start all services**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access your application**
+   - Frontend: `http://localhost`
+   - Backend API: `http://localhost:8000`
+   - API Docs: `http://localhost:8000/docs`
+
+### Alternative Platforms
+
+| Platform     | Backend   | Frontend  | Database               |
+| ------------ | --------- | --------- | ---------------------- |
+| **Railway**  | ✅ Python | ✅ Static | ✅ PostgreSQL          |
+| **Fly.io**   | ✅ Docker | ❌        | ✅ PostgreSQL          |
+| **Netlify**  | ❌        | ✅ Static | ❌                     |
+| **Neon**     | ❌        | ❌        | ✅ Serverless Postgres |
+| **Supabase** | ❌        | ❌        | ✅ PostgreSQL + Auth   |
 
 ---
 
