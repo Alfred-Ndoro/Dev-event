@@ -1,11 +1,12 @@
 # 🚀 Dev-Event Hub
 
-A modern, full-featured developer event management platform built with React and Vite. Discover, book, and manage tech conferences, hackathons, meetups, and workshops all in one place.
+A modern, full-stack developer event management platform built with **React**, **Vite**, and **FastAPI**. Discover, book, and manage tech conferences, hackathons, meetups, and workshops all in one place.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![JSON Server](https://img.shields.io/badge/JSON_Server-REST_API-green?style=for-the-badge)
 
 ---
 
@@ -16,11 +17,10 @@ A modern, full-featured developer event management platform built with React and
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the Application](#running-the-application)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
 - [Environment Variables](#-environment-variables)
 - [API Endpoints](#-api-endpoints)
-- [Pages & Routes](#-pages--routes)
 - [Authentication](#-authentication)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -31,26 +31,29 @@ A modern, full-featured developer event management platform built with React and
 
 ### 🎫 For Attendees
 
-- **Browse Events** - Discover upcoming developer events with detailed information including date, time, location, and agenda
-- **Event Details** - View comprehensive event information including overview, description, organizer details, and tags
-- **Book Events** - Secure your spot with an easy-to-use booking form
-- **Email Confirmation** - Receive booking confirmations via EmailJS integration
-- **Manage Bookings** - View and cancel your event bookings from a personal dashboard
+- **Browse Events** – Discover upcoming developer events with detailed information
+- **Event Details** – View comprehensive event info including overview, agenda, organizer, and tags
+- **Book Events** – Secure your spot with an easy-to-use booking system
+- **Email Confirmation** – Receive booking confirmations via EmailJS
+- **Manage Bookings** – View and cancel bookings from your personal dashboard
 
 ### 👨‍💼 For Administrators
 
-- **Event Management Dashboard** - Full CRUD operations for events
-- **Add Events** - Create new events with comprehensive details (title, image, location, venue, date, time, mode, audience, description, tags, and more)
-- **Edit Events** - Modify existing event information through a user-friendly modal form
-- **Delete Events** - Remove events with confirmation dialogs and optimistic UI updates
-- **Track Bookings** - Monitor booked spots for each event
+- **Event Management Dashboard** – Full CRUD operations for events
+- **Add/Edit/Delete Events** – Manage events with a user-friendly interface
+- **Track Bookings** – Monitor booked spots for each event
+
+### 🔐 Authentication
+
+- **User Registration & Login** – Secure JWT-based authentication
+- **Password Hashing** – Passwords encrypted with PBKDF2-SHA256
+- **Protected Routes** – Role-based access control
 
 ### 🎨 User Experience
 
-- **Modern UI** - Beautiful glassmorphism design with gradient accents
-- **Responsive Design** - Fully responsive layout that works seamlessly on all devices
-- **Interactive Animations** - Custom light ray effects and smooth transitions
-- **Real-time Updates** - Optimistic UI updates for better user experience
+- **Modern UI** – Beautiful glassmorphism design with gradient accents
+- **Responsive Design** – Works seamlessly on all devices
+- **Interactive Animations** – Custom light ray effects and smooth transitions
 
 ---
 
@@ -58,28 +61,27 @@ A modern, full-featured developer event management platform built with React and
 
 ### Frontend
 
-| Technology             | Purpose                                 |
-| ---------------------- | --------------------------------------- |
-| **React 19**           | UI library with latest features         |
-| **Vite 7**             | Fast build tool and dev server          |
-| **React Router DOM 7** | Client-side routing                     |
-| **TailwindCSS 4**      | Utility-first CSS framework             |
-| **Lucide React**       | Beautiful icon library                  |
-| **EmailJS**            | Email service for booking confirmations |
-| **Three.js / OGL**     | 3D graphics for visual effects          |
+| Technology             | Purpose                         |
+| ---------------------- | ------------------------------- |
+| **React 19**           | UI library                      |
+| **Vite 7**             | Build tool and dev server       |
+| **React Router DOM 7** | Client-side routing             |
+| **TailwindCSS 4**      | Utility-first CSS framework     |
+| **Lucide React**       | Icon library                    |
+| **EmailJS**            | Email service for confirmations |
+| **Three.js / OGL**     | 3D graphics for visual effects  |
 
 ### Backend
 
-| Technology      | Purpose                 |
-| --------------- | ----------------------- |
-| **JSON Server** | RESTful API mock server |
-
-### Dev Tools
-
-| Technology         | Purpose             |
-| ------------------ | ------------------- |
-| **ESLint**         | Code linting        |
-| **tw-animate-css** | Animation utilities |
+| Technology      | Purpose                     |
+| --------------- | --------------------------- |
+| **FastAPI**     | Python web framework        |
+| **SQLAlchemy**  | ORM for database operations |
+| **PostgreSQL**  | Relational database         |
+| **Pydantic**    | Data validation             |
+| **Python-Jose** | JWT token handling          |
+| **Passlib**     | Password hashing            |
+| **Uvicorn**     | ASGI server                 |
 
 ---
 
@@ -87,26 +89,33 @@ A modern, full-featured developer event management platform built with React and
 
 ```
 Dev-event/
+├── backend/
+│   └── app/
+│       ├── main.py             # FastAPI application & routes
+│       ├── auth.py             # Authentication routes & logic
+│       ├── database.py         # Database connection setup
+│       ├── database_model.py   # SQLAlchemy models
+│       ├── models.py           # Pydantic schemas
+│       └── requirements.txt    # Python dependencies
 ├── public/
-│   ├── icons/          # App icons (logo, UI icons)
-│   └── images/         # Event images
+│   ├── icons/                  # App icons
+│   └── images/                 # Event images
 ├── src/
-│   ├── assets/         # Static assets
-│   ├── components/     # Reusable UI components
-│   │   ├── ui/         # Base UI components (button, etc.)
+│   ├── components/             # React components
+│   │   ├── ui/                 # Base UI components
 │   │   ├── BookEvent.jsx
 │   │   ├── BookingCard.jsx
 │   │   ├── EventCard.jsx
-│   │   ├── EventContent.jsx
-│   │   ├── EventList.jsx
-│   │   ├── NavBar.jsx
-│   │   ├── LightRays.jsx
 │   │   └── ...
-│   ├── lib/            # Utilities and context
-│   │   ├── auth-context.jsx  # Authentication context
+│   ├── hooks/                  # Custom React hooks
+│   │   ├── useAPI.js
+│   │   └── useEvents.js
+│   ├── lib/                    # Utilities and context
+│   │   ├── api.js              # API client functions
+│   │   ├── auth-context.jsx    # Authentication context
 │   │   ├── constant.js
 │   │   └── utils.js
-│   ├── pages/          # Page components
+│   ├── pages/                  # Page components
 │   │   ├── AdminDashboard.jsx
 │   │   ├── EventPage.jsx
 │   │   ├── HomePage.jsx
@@ -114,12 +123,11 @@ Dev-event/
 │   │   ├── ManageBookings.jsx
 │   │   ├── SignIn.jsx
 │   │   └── SignUp.jsx
-│   ├── App.jsx         # Main app component with routes
-│   ├── main.jsx        # App entry point
-│   └── index.css       # Global styles
-├── dev-event-api/
-│   ├── db.json         # JSON Server database
-│   └── package.json
+│   ├── App.jsx                 # Main app with routes
+│   ├── main.jsx                # Entry point
+│   └── index.css               # Global styles
+├── data/
+│   └── db.json                 # Seed data for database
 ├── package.json
 ├── vite.config.js
 └── README.md
@@ -131,17 +139,71 @@ Dev-event/
 
 ### Prerequisites
 
-Make sure you have the following installed:
+- **Node.js** v18+
+- **Python** 3.10+
+- **PostgreSQL** database (local or cloud-hosted)
 
-- **Node.js** (v18 or higher recommended)
-- **npm** or **yarn**
+---
 
-### Installation
+### Backend Setup
 
-1. **Clone the repository**
+1. **Navigate to the backend directory**
 
    ```bash
-   git clone https://github.com/njoroofficial/Dev-event.git
+   cd backend/app
+   ```
+
+2. **Create a virtual environment**
+
+   ```bash
+   python -m venv venv
+   ```
+
+3. **Activate the virtual environment**
+
+   ```bash
+   # On Linux/macOS
+   source venv/bin/activate
+
+   # On Windows
+   venv\Scripts\activate
+   ```
+
+4. **Install Python dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Create a `.env` file in `backend/app/`**
+
+   ```env
+   user=your_db_username
+   password=your_db_password
+   host=your_db_host
+   port=5432
+   dbname=your_db_name
+   ```
+
+6. **Start the backend server**
+
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+   The API will be running at `http://localhost:8000`
+
+7. **View API documentation**
+   - Swagger UI: `http://localhost:8000/docs`
+   - ReDoc: `http://localhost:8000/redoc`
+
+---
+
+### Frontend Setup
+
+1. **Open a new terminal and navigate to the project root**
+
+   ```bash
    cd Dev-event
    ```
 
@@ -151,43 +213,38 @@ Make sure you have the following installed:
    npm install
    ```
 
-3. **Install API dependencies**
-   ```bash
-   cd dev-event-api
-   npm install
-   cd ..
+3. **Create a `.env` file in the project root** (optional)
+
+   ```env
+   VITE_API_URL=http://localhost:8000
    ```
 
-### Running the Application
+4. **Start the development server**
 
-You'll need to run both the API server and the frontend development server.
-
-1. **Start the JSON Server (API)**
-
-   ```bash
-   cd dev-event-api
-   npm start
-   ```
-
-   The API will be available at `http://localhost:3000`
-
-2. **Start the Frontend (in a new terminal)**
    ```bash
    npm run dev
    ```
+
    The application will be available at `http://localhost:5173`
+
+---
+
+### Running Both Servers
+
+For full functionality, run both servers simultaneously:
+
+| Terminal 1 (Backend)        | Terminal 2 (Frontend) |
+| --------------------------- | --------------------- |
+| `cd backend/app`            | `cd Dev-event`        |
+| `source venv/bin/activate`  | `npm run dev`         |
+| `uvicorn main:app --reload` |                       |
+
+---
 
 ### Build for Production
 
 ```bash
 npm run build
-```
-
-The build output will be in the `dist/` directory.
-
-### Preview Production Build
-
-```bash
 npm run preview
 ```
 
@@ -195,45 +252,61 @@ npm run preview
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the root directory:
+### Backend (`backend/app/.env`)
 
 ```env
-# API URL (optional - defaults to http://localhost:3000)
-VITE_API_URL=http://localhost:3000
+user=your_postgres_username
+password=your_postgres_password
+host=your_db_host
+port=5432
+dbname=your_database_name
+```
+
+### Frontend (`.env` in project root)
+
+```env
+VITE_API_URL=http://localhost:8000
 ```
 
 ---
 
 ## 📡 API Endpoints
 
-The JSON Server provides the following RESTful endpoints:
+Base URL: `http://localhost:8000`
+
+### Health Check
+
+| Method | Endpoint | Description      |
+| ------ | -------- | ---------------- |
+| `GET`  | `/`      | API health check |
+
+### Authentication
+
+| Method | Endpoint      | Description               |
+| ------ | ------------- | ------------------------- |
+| `POST` | `/auth/`      | Register new user         |
+| `POST` | `/auth/login` | Login (returns JWT token) |
+| `POST` | `/auth/token` | OAuth2 token endpoint     |
 
 ### Events
 
-| Method   | Endpoint             | Description            |
-| -------- | -------------------- | ---------------------- |
-| `GET`    | `/events`            | Get all events         |
-| `GET`    | `/events/:id`        | Get single event by ID |
-| `GET`    | `/events?slug=:slug` | Get event by slug      |
-| `POST`   | `/events`            | Create new event       |
-| `PUT`    | `/events/:id`        | Update event           |
-| `DELETE` | `/events/:id`        | Delete event           |
-
-### Users
-
-| Method | Endpoint              | Description              |
-| ------ | --------------------- | ------------------------ |
-| `GET`  | `/users`              | Get all users            |
-| `GET`  | `/users?email=:email` | Get user by email        |
-| `POST` | `/users`              | Create new user (signup) |
+| Method   | Endpoint         | Description       |
+| -------- | ---------------- | ----------------- |
+| `GET`    | `/events`        | Get all events    |
+| `GET`    | `/events/{slug}` | Get event by slug |
+| `POST`   | `/events`        | Create new event  |
+| `PUT`    | `/events/{slug}` | Update event      |
+| `DELETE` | `/events/{slug}` | Delete event      |
 
 ### Bookings
 
-| Method   | Endpoint               | Description         |
-| -------- | ---------------------- | ------------------- |
-| `GET`    | `/bookings?userId=:id` | Get user's bookings |
-| `POST`   | `/bookings`            | Create new booking  |
-| `DELETE` | `/bookings/:id`        | Cancel booking      |
+| Method   | Endpoint                           | Description                 |
+| -------- | ---------------------------------- | --------------------------- |
+| `GET`    | `/bookings/{user_id}`              | Get all bookings for a user |
+| `GET`    | `/booking/detail/{booking_id}`     | Get booking by ID           |
+| `POST`   | `/bookings`                        | Create new booking          |
+| `DELETE` | `/bookings/{booking_id}`           | Cancel booking              |
+| `GET`    | `/bookings/check/{user_id}/{slug}` | Check if user booked event  |
 
 ---
 
@@ -253,27 +326,28 @@ The JSON Server provides the following RESTful endpoints:
 
 ## 🔑 Authentication
 
-The application uses a simple authentication system with React Context:
+The application uses **JWT-based authentication**:
 
-### User Roles
-
-- **Regular Users**: Can browse events, book events, and manage their bookings
-- **Admin Users**: Full access including event CRUD operations
-
-### Admin Access
-
-To access the admin dashboard, sign in with:
-
-- **Email**: `admin@gmail.com`
-- **Password**: (set during signup or in db.json)
+- Passwords are hashed using **PBKDF2-SHA256**
+- Tokens expire after **20 minutes**
+- Tokens are stored in `localStorage`
 
 ### How It Works
 
-1. User credentials are stored in `db.json` via JSON Server
-2. Authentication state is managed with React Context (`AuthProvider`)
-3. User session persists via `localStorage`
+1. User registers or logs in via `/auth/` or `/auth/login`
+2. Server returns a JWT token
+3. Token is included in `Authorization: Bearer <token>` header for protected requests
+4. Authentication state is managed with React Context (`AuthProvider`)
 
->
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
