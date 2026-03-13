@@ -1,18 +1,37 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth-context";
-
-const API_URL = "http://localhost:3000/events";
+import { eventsAPI } from "../lib/api";
+import { useAPI, useMutation } from "../hooks/useAPI";
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  // Check if user is admin
+  const isAdmin = currentUser?.email === "deveventadmin@gmail.com";
+
+  // Fetch events using useAPI hook
+  const {
+    data: events,
+    loading,
+    error,
+    setData: setEvents,
+    execute: refetchEvents,
+  } = useAPI(() => eventsAPI.getAll(), [], {
+    immediate: isAdmin,
+    initialData: [],
+  });
+
+  // Mutations
+  const { mutate: createEvent } = useMutation(eventsAPI.create);
+  const { mutate: updateEvent } = useMutation((data) =>
+    eventsAPI.update(data.slug, data)
+  );
+  const { mutate: deleteEvent } = useMutation(eventsAPI.delete);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState(null); // null = adding, object = editing
+  const [editingEvent, setEditingEvent] = useState(null);
 
   // Form state
   const initialFormState = {
@@ -32,35 +51,7 @@ const AdminDashboard = () => {
   };
   const [formData, setFormData] = useState(initialFormState);
 
-  // Check if user is admin
-  const isAdmin = currentUser?.email === "admin@gmail.com";
-
-  // --- Data Fetching ---
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Failed to fetch events");
-      const data = await response.json();
-      setEvents(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Only fetch if user is admin
-    if (isAdmin) {
-      fetchEvents();
-    } else {
-      setLoading(false);
-    }
-  }, [isAdmin, fetchEvents]);
-
-  // --- Access Control (after hooks) ---
+  // --- Access Control ---
   if (!currentUser) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-white pt-20">
@@ -96,23 +87,17 @@ const AdminDashboard = () => {
   }
 
   // --- CRUD Actions ---
-
-  const handleDelete = async (id) => {
+  const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
-    // Optimistic update: Remove from UI immediately
     const previousEvents = [...events];
-    setEvents((prev) => prev.filter((event) => event.id !== id));
+    setEvents((prev) => prev.filter((event) => event.slug !== slug));
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Failed to delete event");
+      await deleteEvent(slug);
     } catch (err) {
       console.error("Error deleting event:", err);
       alert("Failed to delete event. Please try again.");
-      // Rollback UI change if server request fails
       setEvents(previousEvents);
     }
   };
@@ -156,7 +141,6 @@ const AdminDashboard = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Generate slug from title
   const generateSlug = (title) => {
     return title
       .toLowerCase()
@@ -167,7 +151,6 @@ const AdminDashboard = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
     if (
       !formData.title ||
       !formData.date ||
@@ -180,7 +163,6 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Prepare data (convert tags string to array)
     const payload = {
       ...formData,
       tags: formData.tags
@@ -193,29 +175,13 @@ const AdminDashboard = () => {
 
     try {
       if (editingEvent) {
-        // Update existing event
-        const response = await fetch(`${API_URL}/${editingEvent.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, id: editingEvent.id }),
-        });
-        if (!response.ok) throw new Error("Failed to update event");
-
-        const updatedEvent = await response.json();
-        setEvents(
-          events.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+        const updatedEvent = await updateEvent(payload);
+        setEvents((prev) =>
+          prev.map((ev) => (ev.slug === editingEvent.slug ? updatedEvent : ev))
         );
       } else {
-        // Create new event
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) throw new Error("Failed to create event");
-
-        const newEvent = await response.json();
-        setEvents([...events, newEvent]);
+        const newEvent = await createEvent(payload);
+        setEvents((prev) => [...prev, newEvent]);
       }
       handleCloseModal();
     } catch (err) {
@@ -225,7 +191,6 @@ const AdminDashboard = () => {
   };
 
   // --- Render ---
-
   if (loading) {
     return (
       <div className="text-center text-white mt-20">Loading events...</div>
@@ -237,7 +202,7 @@ const AdminDashboard = () => {
       <div className="text-center text-white mt-20">
         <p className="text-red-400 mb-4">Error: {error}</p>
         <button
-          onClick={fetchEvents}
+          onClick={refetchEvents}
           className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
         >
           Retry
@@ -276,7 +241,7 @@ const AdminDashboard = () => {
             <tbody className="divide-y divide-gray-800">
               {events.map((event) => (
                 <tr
-                  key={event.id}
+                  key={event.slug}
                   className="hover:bg-gray-800/30 transition-colors group"
                 >
                   <td className="p-4">
@@ -295,7 +260,7 @@ const AdminDashboard = () => {
                   <td className="p-4 text-gray-300">{event.date}</td>
                   <td className="p-4 text-gray-300">{event.time}</td>
                   <td className="p-4 text-gray-300">
-                    {event.bookedSpots || 0}
+                    {event.booked_spots || 0}
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-4">
@@ -306,7 +271,7 @@ const AdminDashboard = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(event.id)}
+                        onClick={() => handleDelete(event.slug)}
                         className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
                       >
                         Delete
@@ -327,7 +292,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal - Keep existing modal code */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto">
           <div className="bg-[#1e293b] border border-gray-700 rounded-xl shadow-2xl w-full max-w-2xl my-8 mx-4 relative">
@@ -340,23 +305,12 @@ const AdminDashboard = () => {
                 onClick={handleCloseModal}
                 className="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-700 transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                ✕
               </button>
             </div>
 
             <form onSubmit={handleFormSubmit} className="p-5 space-y-5">
-              {/* Title - Full Width */}
+              {/* Title */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Title *
@@ -366,13 +320,13 @@ const AdminDashboard = () => {
                   name="title"
                   value={formData.title}
                   onChange={handleFormChange}
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                   placeholder="Enter event title"
                   required
                 />
               </div>
 
-              {/* Image URL - Full Width */}
+              {/* Image URL */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Image URL
@@ -382,13 +336,13 @@ const AdminDashboard = () => {
                   name="image"
                   value={formData.image}
                   onChange={handleFormChange}
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                   placeholder="/images/event1.png or https://..."
                 />
               </div>
 
-              {/* Date & Time Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">
                     Date *
@@ -398,7 +352,7 @@ const AdminDashboard = () => {
                     name="date"
                     value={formData.date}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:outline-none"
                     required
                   />
                 </div>
@@ -411,14 +365,14 @@ const AdminDashboard = () => {
                     name="time"
                     value={formData.time}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:outline-none"
                     required
                   />
                 </div>
               </div>
 
-              {/* Location & Venue Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Location & Venue */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">
                     Location *
@@ -428,7 +382,7 @@ const AdminDashboard = () => {
                     name="location"
                     value={formData.location}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                     placeholder="San Francisco, CA"
                     required
                   />
@@ -442,14 +396,14 @@ const AdminDashboard = () => {
                     name="venue"
                     value={formData.venue}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                     placeholder="Convention Center"
                   />
                 </div>
               </div>
 
-              {/* Mode & Audience Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Mode & Audience */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">
                     Mode
@@ -458,7 +412,7 @@ const AdminDashboard = () => {
                     name="mode"
                     value={formData.mode}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-[#5dfeca] focus:outline-none"
                   >
                     <option value="offline">Offline</option>
                     <option value="online">Online</option>
@@ -474,13 +428,13 @@ const AdminDashboard = () => {
                     name="audience"
                     value={formData.audience}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                     placeholder="Developers, Engineers"
                   />
                 </div>
               </div>
 
-              {/* Organizer - Full Width */}
+              {/* Organizer */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Organizer
@@ -490,12 +444,12 @@ const AdminDashboard = () => {
                   name="organizer"
                   value={formData.organizer}
                   onChange={handleFormChange}
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
+                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
                   placeholder="Organization name"
                 />
               </div>
 
-              {/* Overview */}
+              {/* Overview & Description */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Overview
@@ -505,12 +459,10 @@ const AdminDashboard = () => {
                   value={formData.overview}
                   onChange={handleFormChange}
                   rows="2"
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors resize-none"
-                  placeholder="Brief overview of the event"
+                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none resize-none"
+                  placeholder="Brief overview"
                 ></textarea>
               </div>
-
-              {/* Description */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
                   Description
@@ -520,13 +472,13 @@ const AdminDashboard = () => {
                   value={formData.description}
                   onChange={handleFormChange}
                   rows="3"
-                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors resize-none"
-                  placeholder="Detailed description of the event"
+                  className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none resize-none"
+                  placeholder="Detailed description"
                 ></textarea>
               </div>
 
-              {/* Tags & Slug Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Tags & Slug */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">
                     Tags
@@ -536,8 +488,8 @@ const AdminDashboard = () => {
                     name="tags"
                     value={formData.tags}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
-                    placeholder="react, javascript, conference"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
+                    placeholder="react, javascript"
                   />
                   <p className="text-gray-500 text-xs">Comma separated</p>
                 </div>
@@ -550,8 +502,8 @@ const AdminDashboard = () => {
                     name="slug"
                     value={formData.slug}
                     onChange={handleFormChange}
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:ring-1 focus:ring-[#5dfeca] focus:outline-none transition-colors"
-                    placeholder="auto-generated-from-title"
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-[#5dfeca] focus:outline-none"
+                    placeholder="auto-generated"
                   />
                   <p className="text-gray-500 text-xs">
                     Leave empty to auto-generate
@@ -559,18 +511,18 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-5 border-t border-gray-700 mt-6">
+              {/* Buttons */}
+              <div className="flex justify-end gap-3 pt-5 border-t border-gray-700">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-5 py-2.5 text-gray-300 hover:text-white border border-gray-600 hover:border-gray-500 rounded-lg transition-colors"
+                  className="px-5 py-2.5 text-gray-300 border border-gray-600 rounded-lg hover:text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-linear-to-r from-[#5dfeca] to-[#4adbc0] text-gray-900 font-semibold rounded-lg hover:opacity-90 transition-opacity"
+                  className="px-6 py-2.5 bg-linear-to-r from-[#5dfeca] to-[#4adbc0] text-gray-900 font-semibold rounded-lg hover:opacity-90"
                 >
                   {editingEvent ? "Save Changes" : "Create Event"}
                 </button>

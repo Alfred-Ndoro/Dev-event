@@ -2,43 +2,27 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import BookingCard from "@/components/BookingCard";
 import { Link } from "react-router-dom";
+import { bookingsAPI } from "@/lib/api";
+import { useAPI, useMutation } from "@/hooks/useAPI";
 
 const ManageBookings = () => {
   const { currentUser } = useAuth();
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // If no user is logged in, stop loading (UI will show login prompt)
-    if (!currentUser) {
-      setLoading(false);
-      return;
+  const {
+    data: bookings,
+    loading,
+    error,
+    setData: setBookings,
+  } = useAPI(
+    () => bookingsAPI.getByUserId(currentUser?.id),
+    [currentUser?.id],
+    {
+      immediate: !!currentUser?.id,
+      initialData: [],
     }
+  );
 
-    const fetchBookings = async () => {
-      try {
-        // Fetch bookings for the specific user
-        const response = await fetch(
-          `http://localhost:3000/bookings?userId=${currentUser.id}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch bookings");
-        }
-
-        const data = await response.json();
-        setBookings(data);
-      } catch (err) {
-        console.error("Error fetching bookings:", err);
-        setError("Could not load your bookings. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [currentUser]);
+  const { mutate: deleteBooking } = useMutation(bookingsAPI.delete);
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm("Are you sure you want to cancel this booking?"))
@@ -49,17 +33,7 @@ const ManageBookings = () => {
     setBookings((prev) => prev.filter((b) => b.id !== bookingId));
 
     try {
-      const response = await fetch(
-        `http://localhost:3000/bookings/${bookingId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to cancel booking on server");
-      }
-      // Optional: Show success toast here
+      await deleteBooking(bookingId);
     } catch (err) {
       console.error("Error cancelling booking:", err);
       alert("Failed to cancel booking. Please try again.");

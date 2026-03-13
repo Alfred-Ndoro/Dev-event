@@ -1,6 +1,7 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -8,28 +9,23 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  // custom hook to access context functions
-  const { signup, loading } = useAuth();
+  const { signup } = useAuth();
 
   function handleChange(event) {
-    const name = event.target.name;
-    const value = event.target.value;
-
-    setFormData((prevState) => {
-      return {
-        ...prevState,
-        [name]: value,
-      };
-    });
+    const { name, value } = event.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setError("");
 
     // client side validation
     if (!formData.email || !formData.password) {
@@ -47,12 +43,15 @@ const SignUp = () => {
       return;
     }
 
-    const result = await signup(formData.email, formData.password);
-    setMessage(result.message);
-    if (result.success) {
-      // Redirect or clear form on success
-      console.log("Account created successfully!");
-      navigate("/home");
+    setLoading(true);
+
+    try {
+      await signup(formData.email, formData.password);
+      navigate("/signin");
+    } catch (err) {
+      setError(err.message || "Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,6 +71,12 @@ const SignUp = () => {
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="p-3 bg-red-500/20 border border-red-500 rounded text-red-400">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
@@ -93,14 +98,12 @@ const SignUp = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm/6 font-medium text-gray-100"
-                >
-                  Password
-                </label>
-              </div>
+              <label
+                htmlFor="password"
+                className="block text-sm/6 font-medium text-gray-100"
+              >
+                Password
+              </label>
               <div className="mt-2">
                 <input
                   id="password"
@@ -108,30 +111,27 @@ const SignUp = () => {
                   type="password"
                   required
                   onChange={handleChange}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
                 />
               </div>
             </div>
 
-            {/* confirm password */}
             <div>
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm/6 font-medium text-gray-100"
-                >
-                  Confirm Password
-                </label>
-              </div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm/6 font-medium text-gray-100"
+              >
+                Confirm Password
+              </label>
               <div className="mt-2">
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="confirmPassword"
+                  type="password"
                   required
                   onChange={handleChange}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
                 />
               </div>
@@ -141,7 +141,7 @@ const SignUp = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -153,8 +153,6 @@ const SignUp = () => {
                 )}
               </button>
             </div>
-
-            {message && <p>{message}</p>}
           </form>
 
           <p className="mt-10 text-center text-sm/6 text-gray-400">

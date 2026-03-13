@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "./api";
 
 // 1. Create the Context
 const AuthContext = createContext();
-
-const API_URL = "http://localhost:3000/users";
 
 // 2. Custom hook to use the auth context easily
 export const useAuth = () => {
@@ -14,13 +13,18 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   // State to hold the current authenticated user (null if logged out)
   const [currentUser, setCurrentUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Load user from localStorage on component mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+    // Restore session from localStorage
+    const savedUser = localStorage.getItem("currentUser");
+    const savedToken = localStorage.getItem("token");
+
+    if (savedUser && savedToken) {
+      setCurrentUser(JSON.parse(savedUser));
+      setToken(savedToken);
     }
     setLoading(false);
   }, []);
@@ -30,34 +34,19 @@ export const AuthProvider = ({ children }) => {
    * Finds a user with matching email and password.
    */
   const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error("Network response was not ok.");
-      }
-      const users = await response.json();
+    const response = await authAPI.login(email, password);
 
-      // Find user by email and check password
-      const user = users.find(
-        (u) => u.email === email && u.password === password
-      );
+    // Decode token to get user info (simple decode, not verification)
+    const payload = JSON.parse(atob(response.access_token.split(".")[1]));
+    const user = { id: payload.id, email: payload.sub };
 
-      if (user) {
-        // Successful login
-        const userData = { id: user.id, email: user.email }; // Only store safe data
-        setCurrentUser(userData);
-        localStorage.setItem("currentUser", JSON.stringify(userData));
-        return { success: true, message: "Login successful!" };
-      } else {
-        throw new Error("Invalid email or password.");
-      }
-    } catch (error) {
-      console.error("Login Error:", error);
-      return { success: false, message: error.message };
-    } finally {
-      setLoading(false);
-    }
+    setCurrentUser(user);
+    setToken(response.access_token);
+
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("token", response.access_token);
+
+    return user;
   };
 
   /**
@@ -67,44 +56,9 @@ export const AuthProvider = ({ children }) => {
    * This example assumes the user object includes 'email' and 'password'.
    */
   const signup = async (email, password) => {
-    setLoading(true);
-    try {
-      // 1. Check if user already exists (optional, but good practice)
-      const checkResponse = await fetch(`${API_URL}?email=${email}`);
-      const existingUsers = await checkResponse.json();
-      if (existingUsers.length > 0) {
-        throw new Error("A user with this email already exists.");
-      }
-
-      // 2. Perform the POST request to create the user
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // IMPORTANT: The password will be stored in PLAIN TEXT in db.json.
-        // For a real app, you MUST hash the password on a real backend.
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create user account.");
-      }
-
-      const newUser = await response.json();
-
-      // Auto-log the user in after successful signup
-      const userData = { id: newUser.id, email: newUser.email };
-      setCurrentUser(userData);
-      localStorage.setItem("currentUser", JSON.stringify(userData));
-
-      return { success: true, message: "Account created and logged in!" };
-    } catch (error) {
-      console.error("Signup Error:", error);
-      return { success: false, message: error.message };
-    } finally {
-      setLoading(false);
-    }
+    const user = await authAPI.signup(email, password);
+    // Auto-login after signup
+    return login(email, password);
   };
 
   /**
@@ -113,17 +67,24 @@ export const AuthProvider = ({ children }) => {
    */
   const logout = () => {
     setCurrentUser(null);
+    setToken(null);
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("token");
   };
+
+  const isAuthenticated = !!currentUser;
+  const isAdmin = currentUser?.email === "deveventadmin@gmail.com";
 
   // 4. Context Value
   const value = {
     currentUser,
+    token,
     loading,
     login,
     signup,
     logout,
-    isAuthenticated: !!currentUser, // Boolean flag for easy checking
+    isAuthenticated, // Boolean flag for easy checking
+    isAdmin,
   };
 
   // 5. Provide the context value to children

@@ -41,7 +41,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
-    password = Column(String(255), nullable=False)  # Store HASHED password only
+    password = Column(String(255), nullable=False)  # Stores HASHED password 
 
     # Relationship to bookings
     bookings = relationship("Booking", back_populates="user")

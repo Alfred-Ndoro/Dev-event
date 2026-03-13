@@ -132,8 +132,26 @@ class EventSchema(BaseModel):
     description: str
     organizer: str
     tags: List[str]
-    agenda: list
+    agenda: List[str]
 
+class EventCreate(EventBase):
+    pass
+
+class EventResponse(EventBase):
+    id: int
+    booked_spots: int = Field(alias="bookedSpots", default=0)
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+# --- User Schemas ---
+class UserBase(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserCreate(UserBase):
+    password: str  
 
 class BookingCreateSchema(BaseModel):
     """Validates booking creation payloads.

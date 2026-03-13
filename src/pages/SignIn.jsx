@@ -1,38 +1,35 @@
-import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-
-  // custom hook to access context functions
-  const { login, loading } = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setError("");
+    setLoading(true);
 
-    if (!email || !password) {
-      -setError("Please fill in all fields");
-      return;
-    }
+    try {
+      const user = await login(email, password);
 
-    const result = await login(email, password);
-
-    if (result.success) {
       // Redirect based on user role
-      console.log("Logged in successfully!");
-      if (email === "admin@gmail.com") {
+      if (user.email === "deveventadmin@gmail.com") {
         navigate("/admin");
       } else {
         navigate("/home");
       }
-    } else {
-      setMessage("Invalid email or password");
+    } catch (err) {
+      setError(err.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +49,12 @@ const SignIn = () => {
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="p-3 bg-red-500/20 border border-red-500 rounded text-red-400">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
@@ -114,8 +117,6 @@ const SignIn = () => {
                 )}
               </button>
             </div>
-
-            {message && <p>{message}</p>}
           </form>
 
           <p className="mt-10 text-center text-sm/6 text-gray-400">
