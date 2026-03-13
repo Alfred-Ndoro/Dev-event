@@ -1,10 +1,10 @@
 # 🚀 Dev-Event Hub
 
-A modern, full-stack developer event management platform built with **React**, **Vite**, and **FastAPI**. Discover, book, and manage tech conferences, hackathons, meetups, and workshops all in one place.
+A modern, full-stack developer event management platform built with **React**, **Vite**, and **Flask**. Discover, book, and manage tech conferences, hackathons, meetups, and workshops all in one place.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.128-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.1-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 
@@ -77,15 +77,15 @@ A modern, full-stack developer event management platform built with **React**, *
 
 ### Backend
 
-| Technology      | Purpose                     |
-| --------------- | --------------------------- |
-| **FastAPI**     | Python web framework        |
-| **SQLAlchemy**  | ORM for database operations |
-| **PostgreSQL**  | Relational database         |
-| **Pydantic**    | Data validation             |
-| **Python-Jose** | JWT token handling          |
-| **Passlib**     | Password hashing            |
-| **Uvicorn**     | ASGI server                 |
+| Technology           | Purpose                     |
+| -------------------- | --------------------------- |
+| **Flask 3.1**        | Python web framework        |
+| **Flask-SQLAlchemy** | ORM for database operations |
+| **PostgreSQL**       | Relational database         |
+| **Pydantic**         | Data validation             |
+| **PyJWT**            | JWT token handling          |
+| **Passlib**          | Password hashing            |
+| **Gunicorn**         | Production WSGI server      |
 
 ---
 
@@ -95,11 +95,11 @@ A modern, full-stack developer event management platform built with **React**, *
 Dev-event/
 ├── backend/
 │   └── app/
-│       ├── main.py             # FastAPI application & routes
+│       ├── wsgi.py             # Flask application factory & entry point
+│       ├── main.py             # Event & booking route blueprints
 │       ├── auth.py             # Authentication routes & logic
-│       ├── database.py         # Database connection setup
-│       ├── database_model.py   # SQLAlchemy models
-│       ├── models.py           # Pydantic schemas
+│       ├── models.py           # SQLAlchemy models & Pydantic schemas
+│       ├── seed.py             # Database seeding script
 │       └── requirements.txt    # Python dependencies
 ├── public/
 │   ├── icons/                  # App icons
@@ -130,8 +130,6 @@ Dev-event/
 │   ├── App.jsx                 # Main app with routes
 │   ├── main.jsx                # Entry point
 │   └── index.css               # Global styles
-├── data/
-│   └── db.json                 # Seed data for database
 ├── package.json
 ├── vite.config.js
 └── README.md
@@ -192,14 +190,10 @@ Dev-event/
 6. **Start the backend server**
 
    ```bash
-   uvicorn main:app --reload
+   python wsgi.py
    ```
 
    The API will be running at `http://localhost:8000`
-
-7. **View API documentation**
-   - Swagger UI: `http://localhost:8000/docs`
-   - ReDoc: `http://localhost:8000/redoc`
 
 ---
 
@@ -237,11 +231,11 @@ Dev-event/
 
 For full functionality, run both servers simultaneously:
 
-| Terminal 1 (Backend)        | Terminal 2 (Frontend) |
-| --------------------------- | --------------------- |
-| `cd backend/app`            | `cd Dev-event`        |
-| `source venv/bin/activate`  | `npm run dev`         |
-| `uvicorn main:app --reload` |                       |
+| Terminal 1 (Backend)       | Terminal 2 (Frontend) |
+| -------------------------- | --------------------- |
+| `cd backend/app`           | `cd Dev-event`        |
+| `source venv/bin/activate` | `npm run dev`         |
+| `python wsgi.py`           |                       |
 
 ---
 
@@ -264,6 +258,7 @@ password=your_postgres_password
 host=your_db_host
 port=5432
 dbname=your_database_name
+SSL_MODE=require
 SECRET_KEY=your-super-secret-jwt-key
 ALGORITHM=HS256
 ALLOWED_ORIGINS=http://localhost:5173,https://your-production-domain.com
