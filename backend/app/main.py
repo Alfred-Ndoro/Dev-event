@@ -1,228 +1,178 @@
-from fastapi import Depends, FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-import json
-from pathlib import Path
-from models import EventBase, BookingCreate, BookingResponse
-from database import SessionLocal, engine
-import database_model
-import auth
-from dotenv import load_dotenv
-import os
+from flask import Blueprint, jsonify, request
+from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
+from models import db, Event, Booking, User, EventSchema, BookingCreateSchema
 
-# Load environment variables
-load_dotenv()
+# Main Blueprint 
+main_bp = Blueprint("main", __name__)
 
-# initializing the app
-app = FastAPI(
-    title="Dev-Event API",
-    description="API for managing developer events and bookings",
-    version="1.0.0"
-)
-app.include_router(auth.router)
+#  EVENT ROUTES
 
-# Get allowed origins from environment or use defaults
-origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
-allowed_origins = [origin.strip() for origin in origins_env.split(",")]
+# GET /events — list every event
+@main_bp.route("/events", methods=["GET"])
+def get_all_events():
+    events = db.session.query(Event).all()
+    return jsonify([e.to_dict() for e in events])
 
-# Log origins for debugging (visible in Render logs)
-print(f"CORS Allowed Origins: {allowed_origins}")
 
-# setup CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# GET /events/<slug> — single event by its slug
+@main_bp.route("/events/<slug>", methods=["GET"])
+def get_one_event(slug):
+    event = db.session.query(Event).filter_by(slug=slug).first()
 
-# create database tables
-database_model.Base.metadata.create_all(bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# health check route
-@app.get("/")
-def health_check():
-    return {"status": "online", "message": "The Dev-Event application is running"}
-
-# get all events
-@app.get("/events")
-def get_all_events(db: Session = Depends(get_db)):
-    events = db.query(database_model.Event).all()
-    return events
-
-# get one event by slug
-@app.get("/events/{slug}")
-def get_one_event(slug: str, db: Session = Depends(get_db)):
-    event = db.query(database_model.Event).filter(database_model.Event.slug == slug).first()
     if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return event
+        return jsonify({"detail": "Event not found"}), 404
 
-# add an event
-@app.post("/events", status_code=201)
-def create_event(event: EventBase, db: Session = Depends(get_db)):
-    db_event = database_model.Event(**event.model_dump())
-    db.add(db_event)
-    db.commit()
-    db.refresh(db_event)
-    return db_event
+    return jsonify(event.to_dict())
 
-# update an event
-@app.put("/events/{slug}")
-def update_event(slug: str, event: EventBase, db: Session = Depends(get_db)):
-    db_event = db.query(database_model.Event).filter(database_model.Event.slug == slug).first()
+
+# POST /events — create a new event
+@main_bp.route("/events", methods=["POST"])
+def create_event():
+    # validate incoming JSON against the Pydantic schema
+    try:
+        event_data = EventSchema(**request.get_json())
+    except ValidationError as e:
+        return jsonify({"detail": e.errors()}), 422
+
+    # persist to the database
+    db_event = Event(**event_data.model_dump())
+    db.session.add(db_event)
+    db.session.commit()
+    db.session.refresh(db_event)
+
+    return jsonify(db_event.to_dict()), 201
+
+
+# PUT /events/<slug> — update an existing event
+@main_bp.route("/events/<slug>", methods=["PUT"])
+def update_event(slug):
+    db_event = db.session.query(Event).filter_by(slug=slug).first()
+
     if db_event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    for key, value in event.model_dump().items():
+        return jsonify({"detail": "Event not found"}), 404
+
+    # validate the update payload
+    try:
+        event_data = EventSchema(**request.get_json())
+    except ValidationError as e:
+        return jsonify({"detail": e.errors()}), 422
+
+    # apply every field from the validated data
+    # the FK constraint has ON UPDATE CASCADE, so changing the slug
+    # automatically propagates to related bookings at the DB level
+    for key, value in event_data.model_dump().items():
         setattr(db_event, key, value)
-    
-    db.commit()
-    db.refresh(db_event)
-    return db_event
 
-# delete an event
-@app.delete("/events/{slug}", status_code=204)
-def delete_event(slug: str, db: Session = Depends(get_db)):
-    db_event = db.query(database_model.Event).filter(database_model.Event.slug == slug).first()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"detail": "Slug already exists or constraint violation"}), 409
+
+    db.session.refresh(db_event)
+    return jsonify(db_event.to_dict())
+
+
+# DELETE /events/<slug> — remove an event
+@main_bp.route("/events/<slug>", methods=["DELETE"])
+def delete_event(slug):
+    db_event = db.session.query(Event).filter_by(slug=slug).first()
+
     if db_event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    db.delete(db_event)
-    db.commit()
-    return None
+        return jsonify({"detail": "Event not found"}), 404
 
-def init_db():
-    db = SessionLocal()
-    
-    count = db.query(database_model.Event).count()
-    
-    if count == 0:
-        # Load events from db.json
-        json_path = Path(__file__).parent.parent.parent / "data" / "db.json"
-        
-        if json_path.exists():
-            try:
-                with open(json_path, "r") as f:
-                    data = json.load(f)
-                
-                events = data.get("events", [])
-                for event_data in events:
-                    # Remove 'id' field as SQLite will auto-generate it
-                    event_data.pop("id", None)
-                    
-                    db_event = database_model.Event(**event_data)
-                    db.add(db_event)
-                
-                db.commit()
-                print(f"Seeded {len(events)} events from db.json")
-            except json.JSONDecodeError as e:
-                print(f"Error: Failed to parse {json_path}: {e}")
-            except Exception as e:
-                db.rollback()
-                print(f"Error: Failed to seed events: {e}")
-        else:
-            print(f"Warning: {json_path} not found, no events seeded")
-    
-    db.close()
+    db.session.delete(db_event)
+    db.session.commit()
 
-init_db()
+    return "", 204
 
 
-# booking routes
+#  BOOKING ROUTES
 
-# get all bookings for a user
-@app.get("/bookings/{user_id}", response_model=list[BookingResponse])
-def get_user_bookings(user_id: int, db: Session = Depends(get_db)):
-    bookings = db.query(database_model.Booking).filter(
-        database_model.Booking.user_id == user_id
-    ).all()
+# GET /bookings/<user_id> — all bookings for a given user
+@main_bp.route("/bookings/<int:user_id>", methods=["GET"])
+def get_user_bookings(user_id):
+    bookings = db.session.query(Booking).filter_by(user_id=user_id).all()
+    return jsonify([b.to_dict() for b in bookings])
 
-    return bookings
 
-# get a single booking by id
-@app.get("/booking/detail/{booking_id}", response_model=BookingResponse)
-def get_booking(booking_id: int, db: Session = Depends(get_db)):
-    booking = db.query(database_model.Booking).filter(
-        database_model.Booking.id == booking_id
-    ).first()
+# GET /booking/detail/<booking_id> — single booking by id
+@main_bp.route("/booking/detail/<int:booking_id>", methods=["GET"])
+def get_booking(booking_id):
+    booking = db.session.query(Booking).filter_by(id=booking_id).first()
 
     if booking is None:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    return booking
+        return jsonify({"detail": "Booking not found"}), 404
 
-# create a new booking
-@app.post("/bookings", status_code=201, response_model=BookingResponse)
-def create_booking(booking: BookingCreate, db: Session = Depends(get_db)):
-   # Check if user exists
-    user = db.query(database_model.User).filter(
-        database_model.User.id == booking.user_id
-    ).first()
+    return jsonify(booking.to_dict())
 
+
+# POST /bookings — create a new booking
+@main_bp.route("/bookings", methods=["POST"])
+def create_booking():
+    # validate incoming JSON
+    try:
+        booking_data = BookingCreateSchema(**request.get_json())
+    except ValidationError as e:
+        return jsonify({"detail": e.errors()}), 422
+
+    # ensure the user exists
+    user = db.session.query(User).filter_by(id=booking_data.user_id).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Check if event exists
-    event = db.query(database_model.Event).filter(
-        database_model.Event.slug == booking.event_slug
-    ).first()
+        return jsonify({"detail": "User not found"}), 404
 
+    # ensure the event exists
+    event = db.session.query(Event).filter_by(slug=booking_data.event_slug).first()
     if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    
-    # Check if user already booked this event
-    existing_booking = db.query(database_model.Booking).filter(
-        database_model.Booking.user_id == booking.user_id,
-        database_model.Booking.event_slug == booking.event_slug
+        return jsonify({"detail": "Event not found"}), 404
+
+    # prevent duplicate bookings for the same user + event
+    existing = db.session.query(Booking).filter_by(
+        user_id=booking_data.user_id,
+        event_slug=booking_data.event_slug,
     ).first()
+    if existing:
+        return jsonify({"detail": "User already booked this event"}), 400
 
-    if existing_booking:
-        raise HTTPException(status_code=400, detail="User already booked this event")
-    
-    # Create booking
-    db_booking = database_model.Booking(**booking.model_dump(by_alias=False))
-    db.add(db_booking)
-
-    # Increment booked_spots on the event
+    # create the booking and bump the event's booked_spots in one transaction
+    db_booking = Booking(**booking_data.model_dump(by_alias=False))
+    db.session.add(db_booking)
     event.booked_spots += 1
 
-    db.commit()
-    db.refresh(db_booking)
-    return db_booking
+    db.session.commit()
+    db.session.refresh(db_booking)
 
-# delete a booking
-@app.delete("/bookings/{booking_id}", status_code=204)
-def delete_booking(booking_id: int, db: Session = Depends(get_db)):
-    booking = db.query(database_model.Booking).filter(
-        database_model.Booking.id == booking_id
-    ).first()
+    return jsonify(db_booking.to_dict()), 201
+
+
+# DELETE /bookings/<booking_id> — cancel a booking
+@main_bp.route("/bookings/<int:booking_id>", methods=["DELETE"])
+def delete_booking(booking_id):
+    booking = db.session.query(Booking).filter_by(id=booking_id).first()
+
     if booking is None:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    
-    # Decrement booked_spots on the event
-    event = db.query(database_model.Event).filter(
-        database_model.Event.slug == booking.event_slug
-    ).first()
+        return jsonify({"detail": "Booking not found"}), 404
+
+    # decrement booked_spots on the linked event
+    event = db.session.query(Event).filter_by(slug=booking.event_slug).first()
     if event and event.booked_spots > 0:
         event.booked_spots -= 1
-    
-    db.delete(booking)
-    db.commit()
-    return None
 
-# check if user has booked an event
-@app.get("/bookings/check/{user_id}/{event_slug}")
-def check_booking(user_id: int, event_slug: str, db: Session = Depends(get_db)):
-    booking = db.query(database_model.Booking).filter(
-        database_model.Booking.user_id == user_id,
-        database_model.Booking.event_slug == event_slug
+    db.session.delete(booking)
+    db.session.commit()
+
+    return "", 204
+
+
+# GET /bookings/check/<user_id>/<event_slug> — has the user booked this event?
+@main_bp.route("/bookings/check/<int:user_id>/<event_slug>", methods=["GET"])
+def check_booking(user_id, event_slug):
+    booking = db.session.query(Booking).filter_by(
+        user_id=user_id, event_slug=event_slug
     ).first()
-    return {"booked": booking is not None, "booking_id": booking.id if booking else None}
+
+    return jsonify({
+        "booked": booking is not None,
+        "booking_id": booking.id if booking else None,
+    })
